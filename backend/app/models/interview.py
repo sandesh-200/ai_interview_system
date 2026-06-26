@@ -5,7 +5,8 @@ import enum
 
 
 class InterviewStatus(str, enum.Enum):
-    scheduled = "scheduled"
+    draft = "draft"
+    ready = "ready"
     ongoing = "ongoing"
     completed = "completed"
     cancelled = "cancelled"
@@ -20,7 +21,7 @@ class Interview(Base):
     seniority_level = Column(String(50), nullable=False)
     max_questions = Column(Integer, default=5, nullable=False)
 
-    status = Column(Enum(InterviewStatus), default=InterviewStatus.scheduled)
+    status = Column(Enum(InterviewStatus), default=InterviewStatus.draft)
 
     created_by = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
 
