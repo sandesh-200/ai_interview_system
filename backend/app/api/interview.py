@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends,status
 from sqlalchemy.orm import Session
 
 from core.database import get_db
@@ -7,6 +7,7 @@ from models.user import User
 from schemas.interview import (
     InterviewCreate,
     InterviewResponse,
+    InterviewUpdate
 )
 from services.interview import InterviewService
 from typing import List
@@ -29,7 +30,6 @@ def create_interview(
         admin_id=current_user.id,
     )
 
-
 @router.get("",response_model=List[InterviewResponse])
 def get_all_interviews(
     db: Session = Depends(get_db),
@@ -44,6 +44,30 @@ def get_interview(
     current_user: User = Depends(admin_required),
 ):
     return InterviewService.get_interview(
+        db=db,
+        interview_id=interview_id,
+    )
+
+@router.patch("/{interview_id}",response_model=InterviewResponse)
+def update_interview(
+    interview_id: int,
+    data: InterviewUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(admin_required),
+):
+    return InterviewService.update_interview(
+        db=db,
+        interview_id=interview_id,
+        data=data,
+    )
+
+@router.delete("/{interview_id}",status_code=status.HTTP_204_NO_CONTENT)
+def delete_interview(
+    interview_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(admin_required),
+):
+    InterviewService.delete_interview(
         db=db,
         interview_id=interview_id,
     )

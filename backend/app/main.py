@@ -37,7 +37,5 @@ app.include_router(api_router)
 api_router.include_router(auth_router)
 api_router.include_router(interview_router)
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+
 
