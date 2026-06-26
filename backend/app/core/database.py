@@ -13,4 +13,4 @@ def get_db() -> Generator:
     try:
         yield db
     finally:
-        db.close
+        db.close()
