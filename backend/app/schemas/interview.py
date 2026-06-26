@@ -23,3 +23,11 @@ class InterviewResponse(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+
+class InterviewUpdate(BaseModel):
+    title: str | None = None
+    job_position: str | None = None
+    seniority_level: str | None = None
+    max_questions: int | None = None

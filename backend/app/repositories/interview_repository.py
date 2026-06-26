@@ -26,5 +26,20 @@ class InterviewRepository:
         return(
             db.query(Interview).filter(Interview.id == interview_id).first()
         )
+
+    @staticmethod
+    def update(db: Session, interview: Interview, data: dict):
+        for key, value in data.items():
+            setattr(interview, key, value)
+
+        db.commit()
+        db.refresh(interview)
+
+        return interview
     
+    @staticmethod
+    def delete(db: Session, interview: Interview):
+        db.delete(interview)
+        db.commit()
+
     

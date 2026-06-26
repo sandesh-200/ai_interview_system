@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from models.interview import InterviewStatus
 from repositories.interview_repository import InterviewRepository
-from schemas.interview import InterviewCreate
+from schemas.interview import InterviewCreate,InterviewUpdate
 
 class InterviewService:
     @staticmethod
@@ -30,10 +30,54 @@ class InterviewService:
         db:Session,
         interview_id:int):
             interview = InterviewRepository.get_by_id(db,interview_id)
-            
+
             if not interview:
               raise HTTPException(
                    status_code=404,
                    detail="Interview not found"
               )
             return interview
+    
+
+    @staticmethod
+    def update_interview(
+        db: Session,interview_id: int,data: InterviewUpdate):
+            interview = InterviewRepository.get_by_id(db,interview_id,)
+
+            if not interview:
+                raise HTTPException(
+                status_code=404,
+                detail="Interview not found")
+
+            if interview.status != InterviewStatus.draft:
+                raise HTTPException(
+            status_code=400,
+            detail="Only draft interviews can be updated.")
+
+            update_data = data.model_dump(exclude_unset=True)
+
+            return InterviewRepository.update(db,interview,update_data)
+    
+    @staticmethod
+    def delete_interview(
+    db: Session,
+    interview_id: int):
+        interview = InterviewRepository.get_by_id(
+        db,
+        interview_id)
+
+        if not interview:
+            raise HTTPException(
+            status_code=404,
+            detail="Interview not found",
+        )
+
+        if interview.status != InterviewStatus.draft:
+            raise HTTPException(
+            status_code=400,
+            detail="Only draft interviews can be deleted.",
+        )
+
+        InterviewRepository.delete(
+        db,
+        interview)

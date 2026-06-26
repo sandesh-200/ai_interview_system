@@ -1,6 +1,6 @@
 import { AppSidebar } from "@/components/sidebar/AppSidebar"
 import { Button } from "@/components/ui/button"
-import { Field, FieldLabel } from "@/components/ui/field"
+import { Field } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   SidebarInset,
