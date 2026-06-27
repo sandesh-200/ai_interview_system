@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { ShimmerLoading } from "@/components/shared/shimmer-loading";
 
 interface ProtectedRouteProps {
   children: React.JSX.Element;
@@ -13,9 +14,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   // 1. Show a loading state while checking the HttpOnly cookie session
   if (loading) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center">
-        <p className="text-muted-foreground animate-pulse">Loading session...</p>
-      </div>
+      <ShimmerLoading text="Loading Session..."/>
     );
   }
 
