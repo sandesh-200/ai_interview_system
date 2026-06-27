@@ -1,0 +1,163 @@
+import { type ColumnDef } from "@tanstack/react-table";
+import type { Interview } from "@/features/interview/interviewTypes";
+import { Badge } from "@/components/ui/badge";
+import { MoreHorizontal, Edit, Trash2, Eye } from "lucide-react"; 
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Checkbox } from "../ui/checkbox";
+import { DataTableColumnHeader } from "../shared/data-table-column-header";
+import { format } from "date-fns";
+
+const statusClasses = {
+  draft: "status-draft",
+  ready: "status-ready",
+  ongoing: "status-ongoing",
+  completed: "status-completed",
+  cancelled: "",
+};
+
+export const columns: ColumnDef<Interview>[] = [
+    {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+
+{
+    accessorKey: "title",
+    // Clean, reusable sorting abstraction
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Title" />,
+    size: 250,
+    cell: ({ row }) => <div className="font-medium max-w-60 truncate">{row.getValue("title")}</div>,
+  },
+  {
+    accessorKey: "job_position",
+    header: "Position",
+    size: 180,
+    cell: ({ row }) => <div className="truncate max-w-42.5">{row.getValue("job_position")}</div>,
+  },
+  {
+    accessorKey: "seniority_level",
+    header: "Level",
+    size: 120,
+  },
+  {
+    accessorKey: "max_questions",
+    header: "Questions",
+    size: 100,
+    cell: ({ row }) => <div className="font-mono pl-2">{row.getValue("max_questions")}</div>,
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    size: 120,
+    cell: ({ row }) => {
+      const status: Interview["status"] = row.getValue("status");
+      return (
+       <Badge
+        variant={status === "cancelled" ? "destructive" : "outline"}
+        className={`capitalize ${statusClasses[status]}`}
+      >
+        {status}
+      </Badge>
+      );
+    },
+  },
+  {
+    accessorKey: "created_at",
+    header:({column})=>(
+        <DataTableColumnHeader column={column} title="Created At"/>
+    ),
+    size: 160,
+cell: ({ row }) => {
+  const date = new Date(row.getValue("created_at") as string);
+  
+  const formattedDate = format(date, "MMM d, yyyy");
+  const formattedTime = format(date, "h:mm a");
+
+  return (
+    <div className="flex flex-col text-left font-mono text-xs gap-0.5">
+      <span className="text-foreground font-medium">{formattedDate}</span>
+      <span className="text-muted-foreground text-[11px]">{formattedTime}</span>
+    </div>
+  );
+},
+  },
+
+{
+    id: "actions",
+    size: 60,
+    cell: ({ row, table }) => {
+      const interview = row.original;
+      const isDraft = interview.status === "draft"; // Rule: Only draft states can be managed
+
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0 cursor-pointer">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            
+            <DropdownMenuItem className="cursor-pointer gap-2">
+              <Eye className="h-3.5 w-3.5 text-muted-foreground" /> View Session
+            </DropdownMenuItem>
+            
+            <DropdownMenuItem 
+              disabled={!isDraft}
+              className={`gap-2 ${isDraft ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}
+              onClick={() => isDraft && table.options.meta?.onEditRow?.(interview)}
+            >
+              <Edit className="h-3.5 w-3.5 text-muted-foreground" /> Edit Info
+            </DropdownMenuItem>
+            
+            <DropdownMenuSeparator />
+            
+            {/* FIXED: Hooking up Delete Row to Table Meta */}
+            <DropdownMenuItem 
+              disabled={!isDraft}
+              className={`gap-2 text-destructive focus:text-destructive focus:bg-destructive/10 ${
+                isDraft ? "cursor-pointer" : "cursor-not-allowed opacity-50"
+              }`}
+              onClick={() => {
+                if (isDraft) {
+                  // @ts-ignore
+                  table.options.meta?.onDeleteRow(interview);
+                }
+              }}
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
+  },
+];

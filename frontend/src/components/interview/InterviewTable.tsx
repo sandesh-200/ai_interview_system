@@ -1,0 +1,242 @@
+import {
+  type ColumnDef,
+  type ColumnFiltersState,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  type SortingState,
+  useReactTable,
+  type VisibilityState,
+} from "@tanstack/react-table"
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import React from "react"
+import { Input } from "../ui/input"
+import { DataTablePagination } from "../shared/data-table-pagination"
+import { DataTableViewOptions } from "../shared/data-table-view-options"
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "../ui/dropdown-menu"
+import { Button } from "../ui/button"
+import { ListFilter } from "lucide-react"
+import CreateInterviewDialog from "./CreateInterviewDialog"
+import type { Interview } from "@/features/interview/interviewTypes"
+import { toast } from "sonner"
+import { useAppDispatch, useAppSelector } from "@/app/hooks"
+import { deleteInterview } from "@/features/interview/interviewThunk"
+import DeleteConfirmDialog from "../shared/delete-confirm-dialog"
+
+interface DataTableProps<TData, TValue> {
+  columns: ColumnDef<TData, TValue>[]
+  data: TData[]
+}
+
+export function InterviewTable<TData, TValue>({
+  columns,
+  data,
+}: DataTableProps<TData, TValue>) {
+  const [isCreateOpen, setIsCreateOpen] = React.useState(false)
+  const [isDeleteOpen, setIsDeleteOpen] = React.useState(false);
+  const [editingInterview, setEditingInterview] = React.useState<Interview | null>(null);
+  const [deletingInterview, setDeletingInterview] = React.useState<Interview | null>(null);
+
+  const globalLoading = useAppSelector((state) => state.interview.loading);
+
+
+const dispatch = useAppDispatch();
+  const handleOpenChange = (open: boolean) => {
+    setIsCreateOpen(open);
+    if (!open) setEditingInterview(null);
+  };
+
+  const handleExecuteDelete = async () => {
+    if (!deletingInterview) return;
+
+    // Redundant workflow guard check
+    if (deletingInterview.status !== "draft") {
+      toast.error("Only interview templates in draft status can be permanently deleted.");
+      setIsDeleteOpen(false);
+      return;
+    }
+    const result = await dispatch(deleteInterview(deletingInterview.id));
+
+    if (deleteInterview.fulfilled.match(result)) {
+      toast.success("Interview session deleted successfully.");
+      setIsDeleteOpen(false);
+      setDeletingInterview(null);
+    } else {
+      toast.error((result.payload as string) ?? "Failed to delete interview.");
+    }
+  };
+
+  const [sorting, setSorting] = React.useState<SortingState>([])
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  )
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>({})
+  const [rowSelection, setRowSelection] = React.useState({})
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onSortingChange:setSorting,
+    getSortedRowModel:getSortedRowModel(),
+    onColumnFiltersChange: setColumnFilters,
+    getFilteredRowModel: getFilteredRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: setRowSelection,
+    meta: {
+      onEditRow: (interview: Interview) => {
+        setEditingInterview(interview);
+        setIsCreateOpen(true);
+      },
+      onDeleteRow: (interview: Interview) => {
+        setDeletingInterview(interview);
+        setIsDeleteOpen(true);
+      },
+    },
+    state:{
+      sorting,
+      columnFilters,
+      columnVisibility,
+      rowSelection
+    }
+
+  })
+
+  const currentStatusFilter = (table.getColumn("status")?.getFilterValue() as string) ?? ""
+
+  return (
+    <div>
+      <div className="flex items-center py-4">
+        
+        <Input
+          placeholder="Filter title "
+          value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
+          onChange={(event) =>
+            table.getColumn("title")?.setFilterValue(event.target.value)
+          }
+          className="max-w-52 mr-3"
+        />
+
+          {/* 2. Filter by Status Dropdown Component */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9 gap-2 cursor-pointer border-dashed">
+                <ListFilter className="h-4 w-4" />
+                Status: {currentStatusFilter ? <span className="font-semibold capitalize text-primary">{currentStatusFilter}</span> : "All"}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-40">
+              <DropdownMenuCheckboxItem
+                checked={currentStatusFilter === ""}
+                onClick={() => table.getColumn("status")?.setFilterValue(undefined)}
+                className="cursor-pointer"
+              >
+                All
+              </DropdownMenuCheckboxItem>
+              {["draft", "ready", "ongoing", "completed", "cancelled"].map((status) => (
+                <DropdownMenuCheckboxItem
+                  key={status}
+                  className="capitalize cursor-pointer"
+                  checked={currentStatusFilter === status}
+                  onClick={() => table.getColumn("status")?.setFilterValue(status)}
+                >
+                  {status}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Clear Filters Button (Shows up only if filters exist) */}
+          {columnFilters.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => table.resetColumnFilters()}
+              className="h-9 px-2 text-xs cursor-pointer text-muted-foreground hover:text-foreground"
+            >
+              Reset
+            </Button>
+          )}
+      
+  <DataTableViewOptions table={table}/>
+
+  <Button
+   onClick={() =>{ 
+    setEditingInterview(null)
+    setIsCreateOpen(true)
+   } }>Add Session</Button>
+      </div>
+    <div className="overflow-hidden rounded-md border mb-4">
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => {
+                return (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                )
+              })}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows?.length ? (
+            table.getRowModel().rows.map((row) => (
+              <TableRow
+                key={row.id}
+                data-state={row.getIsSelected() && "selected"}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={columns.length} className="h-24 text-center">
+                No results.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
+
+<DataTablePagination table={table}/>
+
+<CreateInterviewDialog open={isCreateOpen} onOpenChange={handleOpenChange} interviewToEdit={editingInterview} />
+
+<DeleteConfirmDialog
+        open={isDeleteOpen}
+        onOpenChange={(open) => {
+          setIsDeleteOpen(open);
+          if (!open) setDeletingInterview(null);
+        }}
+        title={`Delete "${deletingInterview?.title || "Session"}"`}
+        description="Are you sure you want to delete this session? This will remove all assigned configuration files permanently."
+        isLoading={globalLoading}
+        onConfirm={handleExecuteDelete}
+      />
+    </div>
+  )
+}

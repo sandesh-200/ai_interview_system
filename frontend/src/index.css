@@ -274,3 +274,19 @@
     z-index: 9999;
   }
 }
+
+.status-draft {
+  @apply bg-slate-100 text-slate-700 border-slate-200;
+}
+
+.status-ready {
+  @apply bg-violet-100 text-violet-700 border-violet-200;
+}
+
+.status-ongoing {
+  @apply bg-blue-100 text-blue-700 border-blue-200;
+}
+
+.status-completed {
+  @apply bg-emerald-100 text-emerald-700 border-emerald-200;
+}

@@ -42,4 +42,10 @@ class InterviewRepository:
         db.delete(interview)
         db.commit()
 
+    @staticmethod
+    def update_status(db:Session,interview,status):
+        interview.status = status
+        db.flush()
+        return interview
+
     
