@@ -11,6 +11,7 @@ from schemas.interview import (
 )
 from services.interview import InterviewService
 from typing import List
+from schemas.common import MessageResponse
 
 router = APIRouter(
     prefix="/interviews",
@@ -68,6 +69,20 @@ def delete_interview(
     current_user: User = Depends(admin_required),
 ):
     InterviewService.delete_interview(
+        db=db,
+        interview_id=interview_id,
+    )
+
+@router.post(
+    "/{interview_id}/generate-questions",
+    response_model=MessageResponse,
+)
+def generate_questions(
+    interview_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(admin_required),
+):
+    return InterviewService.generate_questions(
         db=db,
         interview_id=interview_id,
     )

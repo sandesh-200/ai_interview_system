@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from app.models.interview_question import InterviewQuestion
+from models.interview_question import InterviewQuestion
 
 
 class InterviewQuestionRepository:
