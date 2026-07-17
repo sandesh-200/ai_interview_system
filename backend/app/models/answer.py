@@ -15,5 +15,7 @@ class Answer(Base):
 
     submitted_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
 
+    evaluation = relationship("QuestionEvaluation",uselist=False)
+
     session = relationship("InterviewCandidate")
     question = relationship("Question")

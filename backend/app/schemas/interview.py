@@ -31,3 +31,4 @@ class InterviewUpdate(BaseModel):
     job_position: str | None = None
     seniority_level: str | None = None
     max_questions: int | None = None
+
