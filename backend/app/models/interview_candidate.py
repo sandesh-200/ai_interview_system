@@ -4,11 +4,11 @@ from models.base import Base
 import enum
 
 
-class CandidateStatus(str, enum.Enum):
-    invited = "invited"
-    enrolled = "enrolled"
+class InterviewSessionStatus(str, enum.Enum):
+    pending = "pending"
+    ongoing = "ongoing"
     completed = "completed"
-    scored = "scored"
+    evaluated = "evaluated"
 
 
 class InterviewCandidate(Base):
@@ -18,11 +18,14 @@ class InterviewCandidate(Base):
 
     interview_id = Column(Integer, ForeignKey("interviews.id", ondelete="CASCADE"))
     candidate_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    current_interview_question_id = Column(Integer,ForeignKey("interview_questions.id"),nullable=True)
 
-    status = Column(Enum(CandidateStatus), default=CandidateStatus.invited)
+    status = Column(Enum(InterviewSessionStatus), default=InterviewSessionStatus.pending,nullable=False)
 
     enrolled_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     completed_at = Column(TIMESTAMP(timezone=True), nullable=True)
 
     interview = relationship("Interview")
     candidate = relationship("User")
+    current_interview_question = relationship("InterviewQuestion",foreign_keys=[current_interview_question_id])
+    evaluation = relationship("InterviewEvaluation",uselist=False)

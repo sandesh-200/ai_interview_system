@@ -5,4 +5,4 @@ from models.interview_candidate import InterviewCandidate
 from models.question import Question
 from models.interview_question import InterviewQuestion
 from models.answer import Answer
-from models.evaluation import Evaluation
+from models.interview_evaluation import InterviewEvaluation

@@ -1,4 +1,5 @@
 from models.question import Question
+from models.interview_question import InterviewQuestion
 from sqlalchemy.orm import Session
 
 class QuestionRepository:
@@ -15,3 +16,4 @@ class QuestionRepository:
         db.add_all(question_models)
         db.flush()
         return question_models
+
