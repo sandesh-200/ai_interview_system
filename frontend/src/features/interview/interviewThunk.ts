@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import type { CreateInterviewRequest, Interview, UpdateInterviewRequest } from "./interviewTypes";
+import type { CreateInterviewRequest, Interview, InterviewQuestion, UpdateInterviewRequest } from "./interviewTypes";
 import { interviewAPI } from "./InterviewAPI";
 import type { AxiosError } from "axios";
 
@@ -92,3 +92,47 @@ export const deleteInterview = createAsyncThunk<
     );
   }
 });
+
+export const generateInterviewQuestions = createAsyncThunk<
+  number,
+  number,
+  { rejectValue: string }
+>(
+  "interview/generateQuestions",
+  async (id, { rejectWithValue }) => {
+    try {
+      await interviewAPI.generateQuestions(id);
+
+      return id;
+    } catch (error) {
+      const err = error as AxiosError<ApiError>;
+
+      return rejectWithValue(
+        err.response?.data.detail ??
+          "Failed to generate questions"
+      );
+    }
+  }
+);
+
+export const getInterviewQuestions = createAsyncThunk<
+  InterviewQuestion[],
+  number,
+  { rejectValue: string }
+>(
+  "interview/getQuestions",
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await interviewAPI.getQuestions(id);
+
+      return response.data;
+    } catch (error) {
+      const err = error as AxiosError<ApiError>;
+
+      return rejectWithValue(
+        err.response?.data.detail ??
+          "Failed to fetch questions"
+      );
+    }
+  }
+);

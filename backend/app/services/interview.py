@@ -3,6 +3,7 @@ from fastapi import HTTPException
 from models.interview import InterviewStatus
 from repositories.interview_repository import InterviewRepository
 from schemas.interview import InterviewCreate,InterviewUpdate
+from schemas.question import InterviewQuestionResponse
 from repositories.interview_question_repository import InterviewQuestionRepository
 from repositories.question_repository import QuestionRepository
 from ai.chains.question_generator import QuestionGenerator
@@ -154,3 +155,34 @@ class InterviewService:
         except Exception:
             db.rollback()
             raise   
+
+    @staticmethod
+    def get_interview_questions(
+        db: Session,
+        interview_id: int,
+    ):
+        interview = InterviewRepository.get_by_id(
+            db,
+            interview_id,
+        )
+
+        if not interview:
+            raise HTTPException(
+                status_code=404,
+                detail="Interview not found",
+            )
+
+        mappings = InterviewQuestionRepository.get_by_interview(
+            db=db,
+            interview_id=interview_id,
+        )
+
+        return [
+            InterviewQuestionResponse(
+                id=m.question.id,
+                question_text=m.question.question_text,
+                category=m.question.category,
+                order_sequence=m.order_sequence,
+            )
+            for m in mappings
+        ]

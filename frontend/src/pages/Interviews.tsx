@@ -30,7 +30,7 @@ useEffect(() => {
     </h3>
   </div>
 
-  {loading ? (
+  {interviews.length === 0 && loading ? (
         <ShimmerLoading text="Loading Interviews..." />
       ) : error ? (
         <Error message={error} onRetry={()=>dispatch(getAllInterviews())} />
