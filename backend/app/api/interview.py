@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from core.database import get_db
 from services.user import admin_required
 from models.user import User
+from schemas.question import InterviewQuestionResponse
 from schemas.interview import (
     InterviewCreate,
     InterviewResponse,
@@ -83,6 +84,20 @@ def generate_questions(
     current_user: User = Depends(admin_required),
 ):
     return InterviewService.generate_questions(
+        db=db,
+        interview_id=interview_id,
+    )
+
+@router.get(
+    "/{interview_id}/questions",
+    response_model=list[InterviewQuestionResponse],
+)
+def get_interview_questions(
+    interview_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(admin_required),
+):
+    return InterviewService.get_interview_questions(
         db=db,
         interview_id=interview_id,
     )

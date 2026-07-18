@@ -30,8 +30,9 @@ import CreateInterviewDialog from "./CreateInterviewDialog"
 import type { Interview } from "@/features/interview/interviewTypes"
 import { toast } from "sonner"
 import { useAppDispatch, useAppSelector } from "@/app/hooks"
-import { deleteInterview } from "@/features/interview/interviewThunk"
+import { deleteInterview, generateInterviewQuestions, getInterviewQuestions } from "@/features/interview/interviewThunk"
 import DeleteConfirmDialog from "../shared/delete-confirm-dialog"
+import ViewQuestionsDialog from "./ViewQuestionsDialog"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -44,10 +45,15 @@ export function InterviewTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   const [isCreateOpen, setIsCreateOpen] = React.useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = React.useState(false);
+  const [isQuestionsOpen, setIsQuestionsOpen] = React.useState(false);
+
   const [editingInterview, setEditingInterview] = React.useState<Interview | null>(null);
   const [deletingInterview, setDeletingInterview] = React.useState<Interview | null>(null);
+  const [viewingInterview, setViewingInterview] = React.useState<Interview | null>(null); // Add this state
 
   const globalLoading = useAppSelector((state) => state.interview.loading);
+
+  const generatingId = useAppSelector((state) => state.interview.generatingId);
 
 
 const dispatch = useAppDispatch();
@@ -76,6 +82,30 @@ const dispatch = useAppDispatch();
     }
   };
 
+  const handleGenerateQuestions = async (interview: Interview) => {
+    // Safety check matching your business rules
+    if (interview.status !== "draft") {
+      toast.error("Questions can only be generated for draft sessions.");
+      return;
+    }
+
+    toast.info(`Starting AI question generation for "${interview.title}"...`);
+    
+    const result = await dispatch(generateInterviewQuestions(interview.id));
+
+    if (generateInterviewQuestions.fulfilled.match(result)) {
+      toast.success("AI interview questions generated successfully! Status updated to Ready.");
+    } else {
+      toast.error((result.payload as string) ?? "Failed to generate AI questions.");
+    }
+  };
+
+  const handleViewQuestions = (interview: Interview) => {
+    setViewingInterview(interview);
+    setIsQuestionsOpen(true);
+    dispatch(getInterviewQuestions(interview.id));
+  };
+
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -95,6 +125,7 @@ const dispatch = useAppDispatch();
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     meta: {
+      generatingId,
       onEditRow: (interview: Interview) => {
         setEditingInterview(interview);
         setIsCreateOpen(true);
@@ -102,6 +133,12 @@ const dispatch = useAppDispatch();
       onDeleteRow: (interview: Interview) => {
         setDeletingInterview(interview);
         setIsDeleteOpen(true);
+      },
+      onGenerateQuestions: (interview: Interview) => {
+        handleGenerateQuestions(interview);
+      },
+      onViewQuestions: (interview: Interview) => {
+        handleViewQuestions(interview); 
       },
     },
     state:{
@@ -237,6 +274,16 @@ const dispatch = useAppDispatch();
         isLoading={globalLoading}
         onConfirm={handleExecuteDelete}
       />
+
+<ViewQuestionsDialog
+        open={isQuestionsOpen}
+        onOpenChange={(open) => {
+          setIsQuestionsOpen(open);
+          if (!open) setViewingInterview(null);
+        }}
+        interview={viewingInterview}
+      />
+
     </div>
   )
 }

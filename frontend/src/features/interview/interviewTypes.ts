@@ -19,7 +19,9 @@ export interface Interview {
 export interface InterviewState{
     interviews:Interview[];
     selectedInterview:Interview | null
+    questions: InterviewQuestion[];
     loading:boolean;
+    generatingId:number | null
     error:string | null;
 }
 
@@ -35,4 +37,11 @@ export interface UpdateInterviewRequest {
   job_position?: string;
   seniority_level?: string;
   max_questions?: number;
+}
+
+export interface InterviewQuestion {
+  id: number;
+  question_text: string;
+  category: "Technical" | "Behavioral";
+  order_sequence: number;
 }

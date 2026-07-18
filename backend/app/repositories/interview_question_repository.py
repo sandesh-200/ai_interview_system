@@ -95,3 +95,18 @@ class InterviewQuestionRepository:
         .first()
     )
 
+    @staticmethod
+    def get_by_interview(
+    db: Session,
+    interview_id: int,
+):
+        return (
+        db.query(InterviewQuestion)
+        .join(Question)
+        .filter(
+            InterviewQuestion.interview_id == interview_id
+        )
+        .order_by(InterviewQuestion.order_sequence)
+        .all()
+    )
+

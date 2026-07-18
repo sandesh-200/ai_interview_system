@@ -5,13 +5,17 @@ import {
   deleteInterview, 
   getAllInterviews, 
   getInterviewById, 
-  updateInterview 
+  updateInterview,
+  generateInterviewQuestions,
+  getInterviewQuestions
 } from "./interviewThunk";
 
 const initialState: InterviewState = {
   interviews: [],
+  questions:[],
   selectedInterview: null,
   loading: false,
+  generatingId:null,
   error: null
 }
 
@@ -68,6 +72,52 @@ const interviewSlice = createSlice({
       }
     });
 
+    builder.addCase(
+      generateInterviewQuestions.pending,
+      (state, action) => {
+        state.error = null;
+        state.generatingId = action.meta.arg;
+      }
+    );
+
+    builder.addCase(
+      generateInterviewQuestions.fulfilled,
+      (state, action) => {
+        state.generatingId = null;
+
+        const interview = state.interviews.find(
+          (i) => i.id === action.payload
+        );
+
+        if (interview) {
+          interview.status = "ready";
+        }
+
+        if (
+          state.selectedInterview?.id === action.payload
+        ) {
+          state.selectedInterview.status = "ready";
+        }
+      }
+    );
+
+     builder.addCase(
+      generateInterviewQuestions.rejected,
+      (state, action) => {
+        state.generatingId = null;
+        state.error =
+          action.payload ?? "Failed to generate questions.";
+      }
+    );
+
+    builder.addCase(
+  getInterviewQuestions.fulfilled,
+  (state, action) => {
+    state.loading = false;
+    state.questions = action.payload;
+  }
+);
+
 //matchers
 
     //pending
@@ -77,7 +127,8 @@ const interviewSlice = createSlice({
         getAllInterviews,
         getInterviewById,
         updateInterview,
-        deleteInterview
+        deleteInterview,
+        getInterviewQuestions
       ),
       (state) => {
         state.loading = true;
@@ -92,7 +143,8 @@ const interviewSlice = createSlice({
         getAllInterviews,
         getInterviewById,
         updateInterview,
-        deleteInterview
+        deleteInterview,
+        getInterviewQuestions
       ),
       (state, action) => {
         state.loading = false;

@@ -1,7 +1,7 @@
 import { type ColumnDef } from "@tanstack/react-table";
 import type { Interview } from "@/features/interview/interviewTypes";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, Edit, Trash2, Eye } from "lucide-react"; 
+import { MoreHorizontal, Edit, Trash2, Eye, Sparkles, FileQuestion } from "lucide-react"; 
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -109,55 +109,88 @@ cell: ({ row }) => {
   },
 
 {
-    id: "actions",
-    size: 60,
-    cell: ({ row, table }) => {
-      const interview = row.original;
-      const isDraft = interview.status === "draft"; // Rule: Only draft states can be managed
+  id: "actions",
+  size: 60,
+  cell: ({ row, table }) => {
+    const interview = row.original;
+    const isDraft = interview.status === "draft";
+    const isReady = ["ready", "ongoing", "completed"].includes(interview.status);
+    
+    // Check if THIS specific row is currently generating questions
+    const meta = table.options.meta as any;
+    const isGeneratingThisRow = meta?.generatingId === interview.id;
 
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0 cursor-pointer">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-40">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuSeparator />
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0 cursor-pointer" disabled={isGeneratingThisRow}>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          
+          <DropdownMenuItem className="cursor-pointer gap-2">
+            <Eye className="h-3.5 w-3.5 text-muted-foreground" /> View Session
+          </DropdownMenuItem>
+          
+          <DropdownMenuItem 
+            disabled={!isDraft || isGeneratingThisRow}
+            className={`gap-2 ${isDraft ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}
+            onClick={() => isDraft && meta?.onEditRow?.(interview)}
+          >
+            <Edit className="h-3.5 w-3.5 text-muted-foreground" /> Edit Info
+          </DropdownMenuItem>
+
+          <DropdownMenuItem 
+            disabled={!isDraft || isGeneratingThisRow}
+            className={`gap-2 ${isDraft ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}
+            onClick={() => {
+              if (isDraft && !isGeneratingThisRow) {
+                meta?.onGenerateQuestions?.(interview);
+              }
+            }}
+          >
+            <Sparkles className={`h-3.5 w-3.5 text-muted-foreground ${isGeneratingThisRow ? "animate-spin" : ""}`} /> 
+            <span className="flex-1 text-left">
+              {isGeneratingThisRow ? "Generating..." : "Generate Questions"}
+            </span>
+            <Badge variant="secondary" className="text-[10px] px-1 py-0 uppercase tracking-wider font-semibold">
+              AI
+            </Badge>
+          </DropdownMenuItem>
             
-            <DropdownMenuItem className="cursor-pointer gap-2">
-              <Eye className="h-3.5 w-3.5 text-muted-foreground" /> View Session
-            </DropdownMenuItem>
-            
-            <DropdownMenuItem 
-              disabled={!isDraft}
-              className={`gap-2 ${isDraft ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}
-              onClick={() => isDraft && table.options.meta?.onEditRow?.(interview)}
-            >
-              <Edit className="h-3.5 w-3.5 text-muted-foreground" /> Edit Info
-            </DropdownMenuItem>
-            
-            <DropdownMenuSeparator />
-            
-            {/* FIXED: Hooking up Delete Row to Table Meta */}
-            <DropdownMenuItem 
-              disabled={!isDraft}
-              className={`gap-2 text-destructive focus:text-destructive focus:bg-destructive/10 ${
-                isDraft ? "cursor-pointer" : "cursor-not-allowed opacity-50"
-              }`}
-              onClick={() => {
-                if (isDraft) {
-                  // @ts-ignore
-                  table.options.meta?.onDeleteRow(interview);
-                }
-              }}
-            >
-              <Trash2 className="h-3.5 w-3.5" /> Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
+<DropdownMenuItem 
+            disabled={!isReady || isGeneratingThisRow}
+            className={`gap-2 ${isReady ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}
+            onClick={() => {
+              if (isReady && !isGeneratingThisRow) {
+                meta?.onViewQuestions?.(interview);
+              }
+            }}
+          >
+            <FileQuestion className="h-3.5 w-3.5 text-muted-foreground" /> View Questions
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+          
+          <DropdownMenuItem 
+            disabled={!isDraft || isGeneratingThisRow}
+            className={`gap-2 text-destructive focus:text-destructive focus:bg-destructive/10 ${
+              isDraft ? "cursor-pointer" : "cursor-not-allowed opacity-50"
+            }`}
+            onClick={() => {
+              if (isDraft) {
+                meta?.onDeleteRow(interview);
+              }
+            }}
+          >
+            <Trash2 className="h-3.5 w-3.5" /> Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
   },
+}
 ];

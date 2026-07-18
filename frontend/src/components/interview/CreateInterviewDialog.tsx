@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createInterview, updateInterview } from "@/features/interview/interviewThunk"; // Ensure updateInterview is imported
+import { createInterview, updateInterview } from "@/features/interview/interviewThunk";
 import { createInterviewSchema, type CreateInterviewFormData } from "@/schema/interview";
 import type { Interview } from "@/features/interview/interviewTypes";
 import { zodResolver } from "@hookform/resolvers/zod";
