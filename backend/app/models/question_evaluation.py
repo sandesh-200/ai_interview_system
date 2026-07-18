@@ -46,8 +46,10 @@ class QuestionEvaluation(Base):
 
     interview_evaluation = relationship(
         "InterviewEvaluation",
+        back_populates="question_evaluations"
     )
 
     answer = relationship(
         "Answer",
+        back_populates="evaluation"
     )

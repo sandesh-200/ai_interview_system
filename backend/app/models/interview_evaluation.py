@@ -30,6 +30,7 @@ class InterviewEvaluation(Base):
     overall_score = Column(Integer, nullable=False)
 
     overall_feedback = Column(Text, nullable=False)
+    
 
     strengths = Column(
         JSONB,
@@ -53,4 +54,10 @@ class InterviewEvaluation(Base):
 
     session = relationship(
         "InterviewCandidate",
+    )
+
+    question_evaluations = relationship(
+        "QuestionEvaluation",
+        back_populates="interview_evaluation",
+        cascade="all, delete-orphan"
     )

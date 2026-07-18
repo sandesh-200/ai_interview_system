@@ -14,3 +14,21 @@ class AnswerRepository:
         db.flush()
 
         return answer
+    
+
+    @staticmethod
+    def get_by_session(
+        db: Session,
+        session_id: int,
+    ):
+        return (
+            db.query(Answer)
+            .filter(
+                Answer.session_id == session_id
+            )
+            .order_by(
+                Answer.submitted_at
+            )
+            .all()
+        )
+    

@@ -11,6 +11,7 @@ from repositories.interview_session_repository import (
 from repositories.interview_question_repository import InterviewQuestionRepository
 from repositories.answer_repository import AnswerRepository
 from schemas.interview_session import SessionQuestionResponse,CurrentQuestionResponse,NextQuestionResponse
+from services.evaluation import EvaluationService
 
 
 class InterviewSessionService:
@@ -249,6 +250,11 @@ class InterviewSessionService:
         )
 
         db.commit()
+
+        EvaluationService.evaluate_session(
+            db=db,
+            session_id=session.id
+        )
 
         return NextQuestionResponse(
             completed=True,
