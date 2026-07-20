@@ -1,27 +1,68 @@
+from fastapi import Depends, HTTPException, Request
 from sqlalchemy.orm import Session
-from models.user import User
-from utils.security import hash_password
-from fastapi import Depends,HTTPException,Request
-from utils.security import decode_token
+
 from core.database import get_db
 
+from models.user import User
+
+from repositories.user_repository import UserRepository
+
+from utils.security import (
+    hash_password,
+    decode_token,
+)
 
 
-def get_user_by_email(db: Session, email: str):
-    return db.query(User).filter(User.email == email).first()
+class UserService:
 
+    @staticmethod
+    def get_user_by_email(
+        db: Session,
+        email: str,
+    ):
+        return UserRepository.get_by_email(
+            db=db,
+            email=email,
+        )
 
-def create_user(db: Session, name: str, email: str, password: str):
-    user = User(
-        name=name,
-        email=email,
-        password_hash=hash_password(password)
-    )
+    @staticmethod
+    def create_user(
+        db: Session,
+        name: str,
+        email: str,
+        password: str,
+    ):
+        user = User(
+            name=name,
+            email=email,
+            password_hash=hash_password(password),
+        )
 
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return user
+        user =  UserRepository.create(
+            db=db,
+            user=user,
+        )
+
+        db.commit()
+        db.refresh(user)
+        return user
+
+    @staticmethod
+    def get_all_candidates(
+        db: Session,
+    ):
+        return UserRepository.get_all_candidates(db)
+    
+    @staticmethod
+    def get_available_candidates(
+        db: Session,
+        interview_id: int,
+    ):
+        return UserRepository.get_available_candidates(
+            db=db,
+            interview_id=interview_id,
+        )
+
 
 
 def get_current_user(
@@ -38,7 +79,8 @@ def get_current_user(
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-    user = db.query(User).filter(User.id == payload["user_id"]).first()
+    # user = db.query(User).filter(User.id == payload["user_id"]).first()
+    user = UserRepository.get_by_id(db=db,user_id=payload["user_id"],)
 
     if not user:
         raise HTTPException(status_code=401, detail="User not found")

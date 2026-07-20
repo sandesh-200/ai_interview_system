@@ -2,9 +2,10 @@ from fastapi import APIRouter, Depends,status
 from sqlalchemy.orm import Session
 from core.database import get_db
 from services.user import candidate_required
-from schemas.interview_session import InterviewSessionResponse,NextQuestionResponse
+from schemas.interview_session import InterviewSessionResponse,NextQuestionResponse,CandidateInterviewResponse
 from schemas.answer import SubmitAnswerRequest
 from models.user import User
+from typing import List
 from services.interview_session import InterviewSessionService,CurrentQuestionResponse
 
 router = APIRouter(

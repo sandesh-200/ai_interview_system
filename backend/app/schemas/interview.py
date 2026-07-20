@@ -32,3 +32,13 @@ class InterviewUpdate(BaseModel):
     seniority_level: str | None = None
     max_questions: int | None = None
 
+from pydantic import BaseModel, Field
+
+class AssignCandidatesRequest(BaseModel):
+    candidate_ids: list[int] = Field(min_length=1)
+
+class AssignCandidatesResponse(BaseModel):
+    assigned_count: int
+    already_assigned: int
+    assigned_candidate_ids: list[int]
+    message: str

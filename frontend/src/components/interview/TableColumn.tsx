@@ -1,7 +1,7 @@
 import { type ColumnDef } from "@tanstack/react-table";
 import type { Interview } from "@/features/interview/interviewTypes";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, Edit, Trash2, Eye, Sparkles, FileQuestion } from "lucide-react"; 
+import { MoreHorizontal, Edit, Trash2, Eye, Sparkles, FileQuestion, UserPlus } from "lucide-react"; 
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -115,6 +115,8 @@ cell: ({ row }) => {
     const interview = row.original;
     const isDraft = interview.status === "draft";
     const isReady = ["ready", "ongoing", "completed"].includes(interview.status);
+
+    const isAssignable = interview.status === "ready";
     
     // Check if THIS specific row is currently generating questions
     const meta = table.options.meta as any;
@@ -173,6 +175,18 @@ cell: ({ row }) => {
             <FileQuestion className="h-3.5 w-3.5 text-muted-foreground" /> View Questions
           </DropdownMenuItem>
 
+          <DropdownMenuItem 
+            disabled={!isAssignable || isGeneratingThisRow}
+            className={`gap-2 ${isAssignable ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}
+            onClick={() => {
+              if (isAssignable && !isGeneratingThisRow) {
+                meta?.onAssignInterview?.(interview);
+              }
+            }}
+          >
+            <UserPlus className="h-3.5 w-3.5 text-muted-foreground" /> Assign Candidate
+          </DropdownMenuItem>
+
           <DropdownMenuSeparator />
           
           <DropdownMenuItem 
@@ -188,6 +202,9 @@ cell: ({ row }) => {
           >
             <Trash2 className="h-3.5 w-3.5" /> Delete
           </DropdownMenuItem>
+
+
+
         </DropdownMenuContent>
       </DropdownMenu>
     );

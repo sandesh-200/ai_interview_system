@@ -2,6 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
+from models.interview_candidate import InterviewSessionStatus
+
 
 class InterviewSessionResponse(BaseModel):
     id: int
@@ -44,3 +46,19 @@ class NextQuestionResponse(BaseModel):
     category: str | None = None
     order: int | None = None
 
+
+class CandidateInterviewResponse(BaseModel):
+    session_id: int
+    interview_id: int
+
+    title: str
+    job_position: str
+    seniority_level: str
+
+    status: InterviewSessionStatus
+
+    enrolled_at: datetime
+
+    model_config = {
+        "from_attributes": True
+    }
