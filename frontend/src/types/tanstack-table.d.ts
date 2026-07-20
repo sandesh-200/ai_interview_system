@@ -9,5 +9,6 @@ declare module "@tanstack/react-table" {
     onDeleteRow?: (interview: Interview) => void;
     onGenerateQuestions: (interview: Interview) => void;
     onViewQuestions: (interview: Interview) => void;
+    onAssignInterview: (interview: Interview) => void;
   }
 }

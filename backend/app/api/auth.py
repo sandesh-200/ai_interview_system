@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from core.database import get_db
 from utils.security import verify_password, create_access_token
 from schemas.auth import RegisterRequest, LoginRequest
-from services.user import get_user_by_email, create_user
+from services.user import UserService
 from models.user import User
 from services.user import get_current_user
 
@@ -14,11 +14,11 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 @router.post("/register")
 def register(data: RegisterRequest, db: Session = Depends(get_db), response: Response = None):
 
-    existing_user = get_user_by_email(db, data.email)
+    existing_user = UserService.get_user_by_email(db, data.email)
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already exists")
 
-    user = create_user(db, data.name, data.email, data.password)
+    user = UserService.create_user(db, data.name, data.email, data.password)
 
     token = create_access_token({
         "user_id": user.id,
@@ -41,7 +41,7 @@ def register(data: RegisterRequest, db: Session = Depends(get_db), response: Res
 @router.post("/login")
 def login(data: LoginRequest, db: Session = Depends(get_db), response: Response = None):
 
-    user = get_user_by_email(db, data.email)
+    user = UserService.get_user_by_email(db, data.email)
 
     if not user or not verify_password(data.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")

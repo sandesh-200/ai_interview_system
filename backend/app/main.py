@@ -10,6 +10,8 @@ from api.auth import router as auth_router
 from api.interview import router as interview_router
 from api.interview_session import router as interview_session_router
 from api.evaluation import router as evaluation_router
+from api.user import router as user_router
+from api.candidate import router as candidate_router
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -37,9 +39,10 @@ api_router = APIRouter(prefix="/api")
 app.include_router(api_router)
 
 api_router.include_router(auth_router)
+api_router.include_router(user_router)
+api_router.include_router(candidate_router)
 api_router.include_router(interview_router)
 api_router.include_router(interview_session_router)
-api_router.include_router(evaluation_router)
 
 
 

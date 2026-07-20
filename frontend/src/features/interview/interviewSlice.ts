@@ -7,29 +7,46 @@ import {
   getInterviewById, 
   updateInterview,
   generateInterviewQuestions,
-  getInterviewQuestions
+  getInterviewQuestions,
+  getAvailableCandidates,
+  assignCandidates
 } from "./interviewThunk";
 
 const initialState: InterviewState = {
   interviews: [],
-  questions:[],
   selectedInterview: null,
+  questions: [],
+  availableCandidates: [],
+  assignmentResult: null,
   loading: false,
-  generatingId:null,
-  error: null
-}
+  generatingId: null,
+  error: null,
+};
 
 const interviewSlice = createSlice({
   name: "interview",
   initialState,
   reducers: {
-    clearSelectedInterview(state) {
-      state.selectedInterview = null;
-    },
-    clearInterviewError(state) {
-      state.error = null;
-    }
+  clearSelectedInterview(state) {
+    state.selectedInterview = null;
   },
+
+  clearInterviewError(state) {
+    state.error = null;
+  },
+
+  clearQuestions(state) {
+    state.questions = [];
+  },
+
+  clearAvailableCandidates(state) {
+    state.availableCandidates = [];
+  },
+
+  clearAssignmentResult(state) {
+    state.assignmentResult = null;
+  },
+},
 
   extraReducers: (builder) => {
     //fufilled
@@ -117,6 +134,30 @@ const interviewSlice = createSlice({
     state.questions = action.payload;
   }
 );
+  builder.addCase(
+  getAvailableCandidates.fulfilled,
+  (state, action) => {
+    state.loading = false;
+    state.availableCandidates = action.payload;
+  }
+);
+
+builder.addCase(
+  assignCandidates.fulfilled,
+  (state, action) => {
+    state.loading = false;
+
+    state.assignmentResult = action.payload;
+
+    state.availableCandidates =
+      state.availableCandidates.filter(
+        (candidate) =>
+          !action.payload.assigned_candidate_ids.includes(
+            candidate.id
+          )
+      );
+  }
+);
 
 //matchers
 
@@ -128,7 +169,9 @@ const interviewSlice = createSlice({
         getInterviewById,
         updateInterview,
         deleteInterview,
-        getInterviewQuestions
+        getInterviewQuestions,
+        getAvailableCandidates,
+        assignCandidates
       ),
       (state) => {
         state.loading = true;
@@ -144,7 +187,9 @@ const interviewSlice = createSlice({
         getInterviewById,
         updateInterview,
         deleteInterview,
-        getInterviewQuestions
+        getInterviewQuestions,
+        getAvailableCandidates,
+        assignCandidates
       ),
       (state, action) => {
         state.loading = false;
@@ -156,7 +201,10 @@ const interviewSlice = createSlice({
 
 export const {
   clearSelectedInterview,
-  clearInterviewError
+  clearInterviewError,
+  clearQuestions,
+  clearAvailableCandidates,
+  clearAssignmentResult
 } = interviewSlice.actions
 
 export default interviewSlice.reducer

@@ -5,7 +5,7 @@ import enum
 
 
 class InterviewSessionStatus(str, enum.Enum):
-    invited = "invited"
+    not_started = "not_started"
     ongoing = "ongoing"
     completed = "completed"
     evaluated = "evaluated"
@@ -20,7 +20,7 @@ class InterviewCandidate(Base):
     candidate_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     current_interview_question_id = Column(Integer,ForeignKey("interview_questions.id"),nullable=True)
 
-    status = Column(Enum(InterviewSessionStatus), default=InterviewSessionStatus.invited,nullable=False)
+    status = Column(Enum(InterviewSessionStatus), default=InterviewSessionStatus.not_started,nullable=False)
 
     enrolled_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     completed_at = Column(TIMESTAMP(timezone=True), nullable=True)

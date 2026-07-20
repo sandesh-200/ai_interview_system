@@ -2,11 +2,13 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from models.interview import InterviewStatus
 from repositories.interview_repository import InterviewRepository
-from schemas.interview import InterviewCreate,InterviewUpdate
+from schemas.interview import InterviewCreate,InterviewUpdate,AssignCandidatesResponse
 from schemas.question import InterviewQuestionResponse
 from repositories.interview_question_repository import InterviewQuestionRepository
 from repositories.question_repository import QuestionRepository
 from ai.chains.question_generator import QuestionGenerator
+from repositories.user_repository import UserRepository
+from repositories.interview_session_repository import InterviewSessionRepository
 
 class InterviewService:
     @staticmethod
@@ -186,3 +188,74 @@ class InterviewService:
             )
             for m in mappings
         ]
+    
+    @staticmethod
+    def assign_candidates(
+        db: Session,
+        interview_id: int,
+        candidate_ids: list[int],
+    ):
+        # Check interview exists
+        interview = InterviewRepository.get_by_id(
+            db,
+            interview_id,
+        )
+
+        if not interview:
+            raise HTTPException(
+                status_code=404,
+                detail="Interview not found.",
+            )
+
+        # Questions must already be generated
+        if interview.status != InterviewStatus.ready:
+            raise HTTPException(
+                status_code=400,
+                detail="Interview must be in READY state before assigning candidates.",
+            )
+
+        # Get first interview question
+        first_question = (
+            InterviewQuestionRepository.get_first_question(
+                db=db,
+                interview_id=interview.id,
+            )
+        )
+
+        if not first_question:
+            raise HTTPException(
+                status_code=400,
+                detail="Interview has no questions.",
+            )
+
+        # Validate candidate ids
+        candidates = UserRepository.get_candidates_by_ids(
+            db=db,
+            candidate_ids=candidate_ids,
+        )
+
+        if len(candidates) != len(candidate_ids):
+            raise HTTPException(
+                status_code=400,
+                detail="One or more candidate IDs are invalid.",
+            )
+
+        # Create interview sessions
+        result = InterviewSessionRepository.create_many(
+            db=db,
+            interview_id=interview.id,
+            candidate_ids=candidate_ids,
+            current_question_id=first_question.id,
+        )
+
+        db.commit()
+
+        return AssignCandidatesResponse(
+    assigned_count=result["assigned_count"],
+    already_assigned=result["already_assigned"],
+    assigned_candidate_ids=[
+        session.candidate_id
+        for session in result["sessions"]
+    ],
+    message=f"{result['assigned_count']} candidate(s) assigned successfully.",
+)

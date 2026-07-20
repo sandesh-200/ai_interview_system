@@ -5,6 +5,8 @@ from core.database import get_db
 from services.user import admin_required
 from models.user import User
 from schemas.question import InterviewQuestionResponse
+
+from schemas.interview import AssignCandidatesResponse,AssignCandidatesRequest
 from schemas.interview import (
     InterviewCreate,
     InterviewResponse,
@@ -100,4 +102,20 @@ def get_interview_questions(
     return InterviewService.get_interview_questions(
         db=db,
         interview_id=interview_id,
+    )
+
+@router.post(
+    "/{interview_id}/assign",
+    response_model=AssignCandidatesResponse,
+)
+def assign_candidates(
+    interview_id: int,
+    data: AssignCandidatesRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(admin_required),
+):
+    return InterviewService.assign_candidates(
+        db=db,
+        interview_id=interview_id,
+        candidate_ids=data.candidate_ids,
     )

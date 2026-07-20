@@ -33,6 +33,7 @@ import { useAppDispatch, useAppSelector } from "@/app/hooks"
 import { deleteInterview, generateInterviewQuestions, getInterviewQuestions } from "@/features/interview/interviewThunk"
 import DeleteConfirmDialog from "../shared/delete-confirm-dialog"
 import ViewQuestionsDialog from "./ViewQuestionsDialog"
+import AssignCandidateDialog from "./AssignCandidateDialog"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -46,6 +47,9 @@ export function InterviewTable<TData, TValue>({
   const [isCreateOpen, setIsCreateOpen] = React.useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = React.useState(false);
   const [isQuestionsOpen, setIsQuestionsOpen] = React.useState(false);
+
+  const [isAssignOpen, setIsAssignOpen] = React.useState(false);
+  const [assigningInterview, setAssigningInterview] = React.useState<Interview | null>(null);
 
   const [editingInterview, setEditingInterview] = React.useState<Interview | null>(null);
   const [deletingInterview, setDeletingInterview] = React.useState<Interview | null>(null);
@@ -106,6 +110,15 @@ const dispatch = useAppDispatch();
     dispatch(getInterviewQuestions(interview.id));
   };
 
+  const handleAssignInterview = (interview: Interview) => {
+  if (interview.status !== "ready") {
+    toast.error("Only interviews in 'Ready' status can be assigned to candidates.");
+    return;
+  }
+  setAssigningInterview(interview);
+  setIsAssignOpen(true);
+};
+
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -140,6 +153,9 @@ const dispatch = useAppDispatch();
       onViewQuestions: (interview: Interview) => {
         handleViewQuestions(interview); 
       },
+      onAssignInterview: (interview: Interview) => {
+      handleAssignInterview(interview);
+    },
     },
     state:{
       sorting,
@@ -283,6 +299,15 @@ const dispatch = useAppDispatch();
         }}
         interview={viewingInterview}
       />
+
+      <AssignCandidateDialog
+  open={isAssignOpen}
+  onOpenChange={(open) => {
+    setIsAssignOpen(open);
+    if (!open) setAssigningInterview(null);
+  }}
+  interview={assigningInterview}
+/>
 
     </div>
   )

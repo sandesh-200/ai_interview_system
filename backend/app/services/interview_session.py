@@ -259,3 +259,13 @@ class InterviewSessionService:
         return NextQuestionResponse(
             completed=True,
         )
+    
+    @staticmethod
+    def get_candidate_interviews(
+        db: Session,
+        candidate_id: int,
+    ):
+        return InterviewSessionRepository.get_candidate_sessions(
+            db=db,
+            candidate_id=candidate_id,
+        )
